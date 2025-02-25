@@ -1,18 +1,20 @@
 /* Основной фон */
 QWidget {
     background-color: #1e1e1e;
-    color: #d3d3d3;
+    color: #9b59b6;
+    font-weight: bold;  /* Жирный текст по умолчанию */
+
 }
 
-/* Названия параметров (меньше шрифт, меньше расстояние) */
+/* Названия параметров */
 QLabel {
     color: #d3d3d3;
     font-size: 11px;
-    font-weight: normal;
+    font-weight: bold;  /* Жирный текст */
     margin-bottom: 2px;
 }
 
-/* Поля ввода (компактнее) */
+/* Поля ввода */
 QLineEdit {
     background-color: #3c3f41;
     color: #d3d3d3;
@@ -47,7 +49,7 @@ QPushButton:pressed {
     background-color: #7d3c92;
 }
 
-/* Консоль (больше высота) */
+/* Консоль */
 QTextEdit {
     background-color: #2b2b2b;
     color: #ffffff;
@@ -56,55 +58,31 @@ QTextEdit {
     font-size: 11px;
     border-radius: 8px;
 }
-
-/* Темные вкладки с фиолетовыми подписями */
+/* Стиль для вкладок */
 QTabWidget::pane {
-    border: none;
-    background: #2b2b2b;
-}
-QTabWidget::tab-bar {
-    alignment: center;
-    background-color: #2b2b2b;
-}
-QTabWidget::tab {
-    background: #3c3f41;
-    border: 1px solid #5c5f62;
-    border-radius: 6px;
-    padding: 5px;
-    font-size: 12px;
-    font-weight: bold;
-    color: #9b59b6;
+    border: none;  /* Убираем рамки вокруг панели вкладок */
 }
 
-/* Активные вкладки */
-QTabWidget::tab:selected {
-    background: #9b59b6;
-    color: white;
-}
-QTabWidget::tab:hover {
-    background: #8e44ad;
+QTabBar::tab {
+    background-color: #444444;  /* Темный фон вкладки */
+    color: #d3d3d3;  /* Светлый цвет текста */
+    padding: 8px 16px;
+    border: 1px solid #555555;  /* Легкая рамка */
 }
 
-/* Контейнер для параметров */
-QGroupBox {
-    background-color: #2b2b2b;
-    border: 1px solid #5c5f62;
-    border-radius: 6px;
-    padding: 6px;
+QTabBar::tab-bar {
+    alignment: center;  /* Выравнивание вкладок по центру */
 }
 
-/* Заголовки групп */
-QGroupBox:title {
-    color: #d3d3d3;
-    font-size: 12px;
-    font-weight: bold;
-    padding: 0 6px;
+QTabBar::tab {
+    background-color: #333333;  /* Темный фон для вкладки */
+    color: #d3d3d3;  /* Цвет текста вкладки */
+    padding: 6px 12px;
 }
 
-/* Автоуплотнение параметров */
-QFormLayout {
-    margin: 4px;
+QTabBar::tab:selected {
+    background-color: #9b59b6;  /* Цвет активной вкладки */
+    color: #fff;  /* Цвет текста активной вкладки */
 }
-QFormLayout QLabel {
-    margin-left: 0;
-}
+
+

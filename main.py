@@ -26,6 +26,7 @@ class GraphicalApp(QWidget):
 
         # Вкладки для алгоритмов
         self.tabs = QTabWidget()
+
         self.left_layout.addWidget(self.tabs)
 
         # Создание кнопки "Запустить алгоритм" (один раз)
@@ -38,7 +39,7 @@ class GraphicalApp(QWidget):
         self.output_text.setReadOnly(True)
         self.output_text.setStyleSheet("background-color: #2b2b2b; color: #ffffff; border: none;")
         self.left_layout.addWidget(self.output_text)
-
+        self.load_styles()
         # Словарь для хранения ссылок на поля ввода
         self.input_fields = {}
         #создаем вкладки, в этой функции вручную добавляем новые
@@ -59,7 +60,12 @@ class GraphicalApp(QWidget):
 
     def create_tabs(self):
         """Создание просто вкладок с названиями"""
-        self.tabs.addTab(QWidget(), "Градиентный спуск")
+        self.tabs.addTab(QTabWidget(), "Градиентный спуск")
+        self.tabs.addTab(QTabWidget(), "Новая вкладка")
+        self.tabs.addTab(QTabWidget(), "Новая вкладка")
+        self.tabs.addTab(QTabWidget(), "Новая вкладка")
+        self.tabs.addTab(QTabWidget(), "Новая вкладка")
+        self.tabs.addTab(QTabWidget(), "Новая вкладка")
 
     def select_alg(self):
         """Выбор алгоритма в зависимости от активной вкладки"""
