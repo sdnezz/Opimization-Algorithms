@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from gradient_descent import GradientDescent  # Подключаем алгоритм градиентного спуска
+from simplex_quad import SimplexQuad
 
 class GraphicalApp(QWidget):
     def __init__(self):
@@ -61,32 +62,28 @@ class GraphicalApp(QWidget):
     def create_tabs(self):
         """Создание просто вкладок с названиями"""
         self.tabs.addTab(QTabWidget(), "Градиентный спуск")
-        self.tabs.addTab(QTabWidget(), "Новая вкладка")
+        self.tabs.addTab(QTabWidget(), "Симплекс-метод")
         self.tabs.addTab(QTabWidget(), "Новая вкладка")
         self.tabs.addTab(QTabWidget(), "Новая вкладка")
         self.tabs.addTab(QTabWidget(), "Новая вкладка")
         self.tabs.addTab(QTabWidget(), "Новая вкладка")
 
+    #Выбирает все норм
     def select_alg(self):
         """Выбор алгоритма в зависимости от активной вкладки"""
         current_tab_index = self.tabs.currentIndex()  # Получаем индекс текущей вкладки
+        self.log_output(f"{self.tabs.currentIndex()}")
         # Если выбрана первая вкладка, используем GradientDescent
         if current_tab_index == 0:
             return GradientDescent()
+        elif current_tab_index == 1:
+            return SimplexQuad()  # Возвращаем симплекс-метод
 
     #меняем в поле класса текущий алгоритм
-    def on_tab_change(self, index):
+    def on_tab_change(self):
         """Метод, который срабатывает при смене вкладки"""
-        # Сохраняем параметры текущего алгоритма перед сменой вкладки
-        if hasattr(self, 'algorithm') and self.algorithm:
-            self.saved_params = self.algorithm.get_params()
-
         # Обновляем алгоритм в зависимости от активной вкладки
         self.algorithm = self.select_alg()
-
-        # Если параметры были сохранены, восстанавливаем их для нового алгоритма
-        if hasattr(self, 'saved_params') and self.saved_params:
-            self.algorithm.set_params(self.saved_params)
 
         # Обновляем контент вкладки
         self.create_tab_content(self.tabs.currentWidget())
@@ -97,7 +94,7 @@ class GraphicalApp(QWidget):
         tab.setLayout(tab_layout)
         form_layout = QFormLayout()  # Макет для полей ввода
         tab_layout.addLayout(form_layout)
-
+        self.input_fields.clear()
         # Проходим по всем атрибутам класса алгоритма
         for param, value in self.algorithm.__dict__.items():
             # Для каждого параметра создаем QLabel и QLineEdit
@@ -109,6 +106,7 @@ class GraphicalApp(QWidget):
 
             # Привязка изменения значения поля к обновлению параметров
             input_field.textChanged.connect(self.params_update)
+            input_field.textChanged.connect(self.log_output("меняются параметры? - нихрена подобного"))
 
     #при нажатии кнопки "стартуем" запускается алгоритм с обновленными параметрами
     def params_update(self):
@@ -130,9 +128,8 @@ class GraphicalApp(QWidget):
     def run_algorithm(self):
         """Запуск выбранного алгоритма"""
         self.log_output("Алгоритм запущен...")
+        self.log_output(f"{self.algorithm}")
         try:
-            # Обновление параметров перед запуском
-            self.params_update()
             # Запуск алгоритма и получение результата
             result = self.plot_update()
             # Выводим результат в консоль
