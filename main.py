@@ -76,7 +76,19 @@ class GraphicalApp(QWidget):
 
     #меняем в поле класса текущий алгоритм
     def on_tab_change(self, index):
+        """Метод, который срабатывает при смене вкладки"""
+        # Сохраняем параметры текущего алгоритма перед сменой вкладки
+        if hasattr(self, 'algorithm') and self.algorithm:
+            self.saved_params = self.algorithm.get_params()
+
+        # Обновляем алгоритм в зависимости от активной вкладки
         self.algorithm = self.select_alg()
+
+        # Если параметры были сохранены, восстанавливаем их для нового алгоритма
+        if hasattr(self, 'saved_params') and self.saved_params:
+            self.algorithm.set_params(self.saved_params)
+
+        # Обновляем контент вкладки
         self.create_tab_content(self.tabs.currentWidget())
 
     def create_tab_content(self, tab):
