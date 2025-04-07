@@ -3,7 +3,8 @@ from PySide6.QtCore import Qt
 from gradient_descent import GradientDescent
 from simplex_quad import SimplexQuad
 from genetic_algorithm import GeneticAlgorithm
-
+from particle_swarm import ParticleSwarmOptimization
+import numpy as np
 class GraphicalApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -36,7 +37,8 @@ class GraphicalApp(QWidget):
         self.algorithms = [
             ("Градиентный спуск", GradientDescent()),
             ("Симплекс-квадратура", SimplexQuad()),
-            ("Генетический алгоритм", GeneticAlgorithm())  # Добавлен новый алгоритм
+            ("Генетический алгоритм", GeneticAlgorithm()),  # Добавлен новый алгоритм
+            ("Роевый алгоритм", ParticleSwarmOptimization())
         ]
         self.saved_params = {i: {k: str(v) for k, v in algo.get_params().items()} for i, (_, algo) in enumerate(self.algorithms)}
         self.input_fields = {}
@@ -102,7 +104,7 @@ class GraphicalApp(QWidget):
         for param, field in self.input_fields.items():
             value = field.text()
             try:
-                # Обрабатываем параметр как строку, которая может быть списком или другим объектом
+                # Обрабатываем параметры для разных алгоритмов
                 if param in ["c", "A", "b", "func_structure", "ineq_signs"]:
                     # Преобразуем строки, представляющие списки, в настоящие списки
                     params[param] = eval(value) if value else self.algorithm.get_params()[param]
@@ -116,10 +118,17 @@ class GraphicalApp(QWidget):
                     params[param] = eval(value) if value else self.algorithm.get_params()[param]
                 elif param == "convergence_threshold":  # Обработка параметра convergence_threshold как float
                     params[param] = float(value) if value else self.algorithm.get_params()[param]
+                elif param in ["initial_point", "minvalues", "maxvalues"]:
+                    # Используем eval с пространством имён numpy
+                    params[param] = eval(value, {"np": np}) if value else self.algorithm.get_params()[param]
+                elif param in ["max_iterations", "swarmsize"]:
+                    params[param] = int(value)
+                elif param in ["current_velocity_ratio", "local_velocity_ratio", "global_velocity_ratio"]:
+                    params[param] = float(value)
                 else:
                     # Преобразуем числа в float (или int, если целые числа)
                     params[param] = float(value) if '.' in value else int(value)
-            except (ValueError, SyntaxError) as e:
+            except (ValueError, SyntaxError, NameError) as e:
                 self.log_output(f"Ошибка в параметре {param}: {str(e)}")
 
         self.algorithm.set_params(params)
