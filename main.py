@@ -1,57 +1,47 @@
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QLineEdit, QLabel, QTextEdit, \
-    QPushButton, QFormLayout
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QLineEdit, QLabel, QTextEdit, QPushButton, QFormLayout
 from PySide6.QtCore import Qt
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from gradient_descent import GradientDescent  # Подключаем алгоритм градиентного спуска
+from gradient_descent import GradientDescent
 from simplex_quad import SimplexQuad
+from genetic_algorithm import GeneticAlgorithm
 
 class GraphicalApp(QWidget):
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("Optimization Algorithms")
-        self.setGeometry(100, 100, 1300, 780)  # Размер окна
+        self.setGeometry(100, 100, 1300, 780)
 
-        # Главный макет
         layout = QHBoxLayout()
         self.setLayout(layout)
 
-        # Слева - параметры алгоритмов и консоль
         self.left_layout = QVBoxLayout()
         layout.addLayout(self.left_layout, 1)
 
-        # Справа - пространство для графика
         self.graph_layout = QVBoxLayout()
         layout.addLayout(self.graph_layout, 2)
 
-        # Вкладки для алгоритмов
         self.tabs = QTabWidget()
-
         self.left_layout.addWidget(self.tabs)
 
-        # Создание кнопки "Запустить алгоритм" (один раз)
         self.start_button = QPushButton("Запустить алгоритм")
         self.start_button.setStyleSheet("background-color: #9b59b6; color: #fff; border-radius: 16px; padding: 8px; font-size: 14px; border: none; margin-top: 0px;")
         self.left_layout.addWidget(self.start_button)
 
-        # Вывод результата (консоль)
         self.output_text = QTextEdit()
         self.output_text.setReadOnly(True)
         self.output_text.setStyleSheet("background-color: #2b2b2b; color: #ffffff; border: none;")
         self.left_layout.addWidget(self.output_text)
+
         self.load_styles()
-        # Словарь для хранения ссылок на поля ввода
+
+        self.algorithms = [
+            ("Градиентный спуск", GradientDescent()),
+            ("Симплекс-квадратура", SimplexQuad()),
+            ("Генетический алгоритм", GeneticAlgorithm())  # Добавлен новый алгоритм
+        ]
+        self.saved_params = {i: {k: str(v) for k, v in algo.get_params().items()} for i, (_, algo) in enumerate(self.algorithms)}
         self.input_fields = {}
-        #создаем вкладки, в этой функции вручную добавляем новые
         self.create_tabs()
-        #затем на основе имеющихся вкладок смотрим, какой алгоритм на текущей вкладке
-        #и присваиваем полю алгоритма текущий алгоритм выбранной вкладки
-        self.algorithm = self.select_alg()
-        # Создаем поля для ввода параметров для выбранного алгоритма
         self.create_tab_content(self.tabs.currentWidget())
-        # Связываем переключение на другую вкладку с обновлением поля класса алгоритм
-        #КОННЕКТЫ-ОБРАБОТЧИКИ ВНУТРИ ВЬЮХИ
         self.tabs.currentChanged.connect(self.on_tab_change)
         self.start_button.clicked.connect(self.run_algorithm)
 
@@ -60,87 +50,91 @@ class GraphicalApp(QWidget):
             self.setStyleSheet(f.read())
 
     def create_tabs(self):
-        """Создание просто вкладок с названиями"""
-        self.tabs.addTab(QTabWidget(), "Градиентный спуск")
-        self.tabs.addTab(QTabWidget(), "Симплекс-метод")
-        self.tabs.addTab(QTabWidget(), "Новая вкладка")
-        self.tabs.addTab(QTabWidget(), "Новая вкладка")
-        self.tabs.addTab(QTabWidget(), "Новая вкладка")
-        self.tabs.addTab(QTabWidget(), "Новая вкладка")
+        for name, _ in self.algorithms:
+            self.tabs.addTab(QWidget(), name)
 
-    #Выбирает все норм
-    def select_alg(self):
-        """Выбор алгоритма в зависимости от активной вкладки"""
-        current_tab_index = self.tabs.currentIndex()  # Получаем индекс текущей вкладки
-        self.log_output(f"{self.tabs.currentIndex()}")
-        # Если выбрана первая вкладка, используем GradientDescent
-        if current_tab_index == 0:
-            return GradientDescent()
-        elif current_tab_index == 1:
-            return SimplexQuad()  # Возвращаем симплекс-метод
-
-    #меняем в поле класса текущий алгоритм
-    def on_tab_change(self):
-        """Метод, который срабатывает при смене вкладки"""
-        # Обновляем алгоритм в зависимости от активной вкладки
-        self.algorithm = self.select_alg()
-
-        # Обновляем контент вкладки
+    def on_tab_change(self, index):
+        if self.tabs.currentIndex() < len(self.algorithms):
+            self.saved_params[self.tabs.currentIndex()] = self.get_params_from_fields()
         self.create_tab_content(self.tabs.currentWidget())
 
+    def get_params_from_fields(self):
+        params = {}
+        for param, field in self.input_fields.items():
+            params[param] = field.text()
+        return params
+
     def create_tab_content(self, tab):
-        """Создание контента вкладки для текущего алгоритма"""
-        tab_layout = QVBoxLayout()  # Создаем макет для вкладки
+        if tab.layout() is not None:
+            while tab.layout().count():
+                child = tab.layout().takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+            QWidget().setLayout(tab.layout())
+
+        tab_layout = QVBoxLayout()
         tab.setLayout(tab_layout)
-        form_layout = QFormLayout()  # Макет для полей ввода
+
+        current_tab_index = self.tabs.currentIndex()
+        if current_tab_index >= len(self.algorithms):
+            label = QLabel("Алгоритм ещё не реализован")
+            label.setAlignment(Qt.AlignCenter)
+            tab_layout.addWidget(label)
+            return
+
+        _, self.algorithm = self.algorithms[current_tab_index]
+        form_layout = QFormLayout()
         tab_layout.addLayout(form_layout)
-        self.input_fields.clear()
-        # Проходим по всем атрибутам класса алгоритма
-        for param, value in self.algorithm.__dict__.items():
-            # Для каждого параметра создаем QLabel и QLineEdit
-            label = QLabel(f"{param}:")  # Метка для каждого параметра
-            input_field = QLineEdit(str(value))  # Поле для ввода с значением по умолчанию из алгоритма
-            form_layout.addRow(label, input_field)  # Добавляем метку и поле ввода в макет
-            # Добавляем поле ввода в словарь
+
+        self.input_fields = {}
+        params = self.saved_params.get(current_tab_index, {k: str(v) for k, v in self.algorithm.get_params().items()})
+        for param, value in self.algorithm.get_params().items():
+            label = QLabel(f"{param}:")
+            # Преобразуем значение в строку явно
+            input_field = QLineEdit(str(params.get(param, str(value))))
+            form_layout.addRow(label, input_field)
             self.input_fields[param] = input_field
 
-            # Привязка изменения значения поля к обновлению параметров
-            input_field.textChanged.connect(self.params_update)
-            input_field.textChanged.connect(self.log_output("меняются параметры? - нихрена подобного"))
-
-    #при нажатии кнопки "стартуем" запускается алгоритм с обновленными параметрами
-    def params_update(self):
-        """Обновляем параметры алгоритма в зависимости от введенных значений в поля ввода."""
+    def apply_fields_to_algorithm(self):
+        if not self.input_fields:
+            return
+        params = {}
         for param, field in self.input_fields.items():
-            # Получаем значение из поля ввода
             value = field.text()
+            try:
+                # Обрабатываем параметр как строку, которая может быть списком или другим объектом
+                if param in ["c", "A", "b", "func_structure", "ineq_signs"]:
+                    # Преобразуем строки, представляющие списки, в настоящие списки
+                    params[param] = eval(value) if value else self.algorithm.get_params()[param]
+                elif param == "extr":
+                    params[param] = value
+                elif param == "max_iter":
+                    params[param] = int(value)
+                elif param == "genetic_bounds":  # Для генетического алгоритма bounds изменяем на genetic_bounds
+                    params[param] = eval(value) if value else self.algorithm.get_params()[param]
+                elif param == "bounds":  # Для SimplexQuad bounds остаётся так, как было
+                    params[param] = eval(value) if value else self.algorithm.get_params()[param]
+                elif param == "convergence_threshold":  # Обработка параметра convergence_threshold как float
+                    params[param] = float(value) if value else self.algorithm.get_params()[param]
+                else:
+                    # Преобразуем числа в float (или int, если целые числа)
+                    params[param] = float(value) if '.' in value else int(value)
+            except (ValueError, SyntaxError) as e:
+                self.log_output(f"Ошибка в параметре {param}: {str(e)}")
 
-            # Проверка, является ли параметр списком (например, для x0)
-            if isinstance(getattr(self.algorithm, param), list):
-                setattr(self.algorithm, param, [float(x) for x in value.strip('[]').split(',')])
-            else:
-                setattr(self.algorithm, param, float(value))  # Для простых числовых значений
-
-    def plot_update(self):
-        """Обновление графика после запуска алгоритма"""
-        self.algorithm.plot(self)  # Вызов метода plot из алгоритма
+        self.algorithm.set_params(params)
 
     def run_algorithm(self):
-        """Запуск выбранного алгоритма"""
         self.log_output("Алгоритм запущен...")
-        self.log_output(f"{self.algorithm}")
         try:
-            # Запуск алгоритма и получение результата
-            result = self.plot_update()
-            # Выводим результат в консоль
-            self.log_output(result)
+            self.apply_fields_to_algorithm()
+            self.log_output(f"Параметры перед запуском: {self.algorithm.__dict__}")
+            self.algorithm.plot(self)
+        except Exception as e:
+            self.log_output(f"Ошибка при запуске: {str(e)}")
 
-        except ValueError:
-            self.log_output("Ошибка: введите верные значения переменных!")
-
-    #Вывод в консоль
     def log_output(self, message):
-        self.output_text.append(message)
+        self.output_text.append(str(message))
 
 if __name__ == "__main__":
     app = QApplication([])
