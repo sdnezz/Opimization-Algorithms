@@ -1,4 +1,3 @@
-# simplex_quad.py
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
@@ -27,10 +26,10 @@ class SimplexQuad:
             "c": self.c,
             "A": self.A,
             "b": self.b,
+            "ineq_signs": self.ineq_signs,
             "bounds": self.bounds,
             "extr": self.extr,
-            "func_structure": self.func_structure,
-            "ineq_signs": self.ineq_signs
+            "func_structure": self.func_structure
         }
 
     def set_params(self, params):
@@ -68,11 +67,11 @@ class SimplexQuad:
         constraints = []
         for i in range(len(self.b)):
             if self.ineq_signs[i] == "<=":
-                constraints.append({'type': 'ineq', 'fun': lambda x, xbi=i: self.b[i] - sum(a_ij * x_j for a_ij, x_j in zip(self.A[i], x))})
+                constraints.append({'type': 'ineq', 'fun': lambda x, xi=i: self.b[i] - sum(a_ij * x_j for a_ij, x_j in zip(self.A[i], x))})
             elif self.ineq_signs[i] == ">=":
-                constraints.append({'type': 'ineq', 'fun': lambda x, xbi=i: sum(a_ij * x_j for a_ij, x_j in zip(self.A[i], x)) - self.b[i]})
+                constraints.append({'type': 'ineq', 'fun': lambda x, xi=i: sum(a_ij * x_j for a_ij, x_j in zip(self.A[i], x)) - self.b[i]})
             elif self.ineq_signs[i] == "=":
-                constraints.append({'type': 'eq', 'fun': lambda x, xbi=i: sum(a_ij * x_j for a_ij, x_j in zip(self.A[i], x)) - self.b[i]})
+                constraints.append({'type': 'eq', 'fun': lambda x, xi=i: sum(a_ij * x_j for a_ij, x_j in zip(self.A[i], x)) - self.b[i]})
         return constraints
 
     def plot(self, window):

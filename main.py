@@ -2,6 +2,8 @@ from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, Q
 from PySide6.QtCore import Qt
 from gradient_descent import GradientDescent
 from simplex_quad import SimplexQuad
+from particle_swarm import ParticleSwarmOptimization
+import numpy as np  # Добавляем импорт numpy
 
 class GraphicalApp(QWidget):
     def __init__(self):
@@ -35,6 +37,7 @@ class GraphicalApp(QWidget):
         self.algorithms = [
             ("Градиентный спуск", GradientDescent()),
             ("Симплекс-квадратура", SimplexQuad()),
+            ("Роевый алгоритм", ParticleSwarmOptimization()),
         ]
         self.saved_params = {i: {k: str(v) for k, v in algo.get_params().items()} for i, (_, algo) in enumerate(self.algorithms)}
         self.input_fields = {}
@@ -87,8 +90,9 @@ class GraphicalApp(QWidget):
         self.input_fields = {}
         params = self.saved_params.get(current_tab_index, {k: str(v) for k, v in self.algorithm.get_params().items()})
         for param, value in self.algorithm.get_params().items():
+            if param == "initial_point" and isinstance(self.algorithm, ParticleSwarmOptimization):
+                continue  # Пропускаем initial_point для PSO
             label = QLabel(f"{param}:")
-            # Преобразуем значение в строку явно
             input_field = QLineEdit(str(params.get(param, str(value))))
             form_layout.addRow(label, input_field)
             self.input_fields[param] = input_field
@@ -100,15 +104,20 @@ class GraphicalApp(QWidget):
         for param, field in self.input_fields.items():
             value = field.text()
             try:
-                if param in ["c", "A", "b", "bounds", "func_structure", "ineq_signs"]:
-                    params[param] = eval(value) if value else self.algorithm.get_params()[param]
+                if param in ["initial_point", "minvalues", "maxvalues"]:
+                    # Используем eval с пространством имён numpy
+                    params[param] = eval(value, {"np": np}) if value else self.algorithm.get_params()[param]
+                elif param in ["c", "A", "b", "bounds", "func_structure", "ineq_signs"]:
+                    params[param] = eval(value, {"np": np}) if value else self.algorithm.get_params()[param]
+                elif param in ["max_iterations", "swarmsize"]:
+                    params[param] = int(value)
+                elif param in ["current_velocity_ratio", "local_velocity_ratio", "global_velocity_ratio"]:
+                    params[param] = float(value)
                 elif param == "extr":
                     params[param] = value
-                elif param == "max_iter":
-                    params[param] = int(value)
                 else:
                     params[param] = float(value)
-            except (ValueError, SyntaxError) as e:
+            except (ValueError, SyntaxError, NameError) as e:
                 self.log_output(f"Ошибка в параметре {param}: {str(e)}")
         self.algorithm.set_params(params)
 
