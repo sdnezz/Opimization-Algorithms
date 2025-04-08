@@ -55,7 +55,7 @@ class ParticleSwarmOptimization:
         class Particle:
             def __init__(self, outer):
                 self.position = np.random.rand(2) * (maxvalues - minvalues) + minvalues
-                self.velocity = np.random.rand(2) * (maxvalues - minvalues) - (maxvalues - minvalues)
+                self.velocity = np.random.rand(2) * (maxvalues - minvalues) - (maxvalues - minvalues) 
                 self.best_position = self.position.copy()
                 self.best_value = outer.f(self.position[0], self.position[1])
 
@@ -63,16 +63,16 @@ class ParticleSwarmOptimization:
                 rnd_local = np.random.rand(2)
                 rnd_global = np.random.rand(2)
                 velo_ratio = outer.local_velocity_ratio + outer.global_velocity_ratio
-                common_ratio = 2.0 * current_velocity_ratio / abs(
-                    2.0 - velo_ratio - np.sqrt(velo_ratio ** 2 - 4.0 * velo_ratio))
-
+                # тут используется модифицированная формула с параметром common_ratio (я на листочке расписал, если надо)
+                common_ratio = 2.0 * current_velocity_ratio / abs(2.0 - velo_ratio - np.sqrt(velo_ratio ** 2 - 4.0 * velo_ratio))
+                
                 new_velocity = (common_ratio * self.velocity +
                                 common_ratio * outer.local_velocity_ratio * rnd_local * (self.best_position - self.position) +
                                 common_ratio * outer.global_velocity_ratio * rnd_global * (global_best_position - self.position))
                 self.velocity = new_velocity
                 self.position += self.velocity
                 value = outer.f(self.position[0], self.position[1])
-                if value < self.best_value:
+                if value < self.best_value: # если частица нашла лучшее значение, то обновляется ее бест велью и позишн
                     self.best_value = value
                     self.best_position = self.position.copy()
 
@@ -92,10 +92,10 @@ class ParticleSwarmOptimization:
 
         for i in range(self.max_iterations):
             # Затухание инерции
-            current_velocity_ratio = self.current_velocity_ratio * (1 - i / self.max_iterations)
+            current_velocity_ratio = self.current_velocity_ratio * (1 - i / self.max_iterations) # уменьшается коэффициент инерции (у нас он не константа, а зависит от итерации)
             for particle in swarm:
-                particle.update(self, global_best_position, current_velocity_ratio)
-                if particle.best_value < global_best_value:
+                particle.update(self, global_best_position, current_velocity_ratio) # тут обновляется скорость и позиция для каждой частицы
+                if particle.best_value < global_best_value: # если нашлось бест велью в частице лучшее, чем глобальное бест велью, то обновляется лучшее глобальное значение и позиция 
                     global_best_value = particle.best_value
                     global_best_position = particle.best_position.copy()
 
@@ -103,7 +103,7 @@ class ParticleSwarmOptimization:
             f_val = self.f(global_best_position[0], global_best_position[1])
             window.log_output(f"Итерация {i}: x={global_best_position.tolist()}, f(x)={f_val:.6f}")
 
-            # Критерий остановки
+            # Критерий остановки 1e-6
             if f_val < tolerance:
                 window.log_output(f"Достигнута точность {tolerance}. Остановка на итерации {i}.")
                 break
