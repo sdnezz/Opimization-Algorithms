@@ -4,6 +4,7 @@ from gradient_descent import GradientDescent
 from simplex_quad import SimplexQuad
 from genetic_algorithm import GeneticAlgorithm
 from particle_swarm import ParticleSwarmOptimization
+from bees_algorithm import BeesAlgorithm
 import numpy as np
 class GraphicalApp(QWidget):
     def __init__(self):
@@ -38,7 +39,8 @@ class GraphicalApp(QWidget):
             ("Градиентный спуск", GradientDescent()),
             ("Симплекс-квадратура", SimplexQuad()),
             ("Генетический алгоритм", GeneticAlgorithm()),  # Добавлен новый алгоритм
-            ("Роевый алгоритм", ParticleSwarmOptimization())
+            ("Роевый алгоритм", ParticleSwarmOptimization()),
+            ("Пчелиный алгоритм", BeesAlgorithm())
         ]
         self.saved_params = {i: {k: str(v) for k, v in algo.get_params().items()} for i, (_, algo) in enumerate(self.algorithms)}
         self.input_fields = {}
@@ -124,6 +126,11 @@ class GraphicalApp(QWidget):
                 elif param in ["max_iterations", "swarmsize"]:
                     params[param] = int(value)
                 elif param in ["current_velocity_ratio", "local_velocity_ratio", "global_velocity_ratio"]:
+                    params[param] = float(value)
+                elif param in ["scoutbeecount", "selectedbeecount", "bestbeecount", "selsitescount", "bestsitescount",
+                               "max_iterations", "max_stagnation"]:
+                    params[param] = int(value)
+                elif param in ["range_lower", "range_upper", "range_shrink", "convergence_threshold"]:
                     params[param] = float(value)
                 else:
                     # Преобразуем числа в float (или int, если целые числа)
