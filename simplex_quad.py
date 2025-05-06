@@ -99,7 +99,7 @@ class SimplexQuad:
         Z = np.array([[self.objective([x1, x2]) for x1, x2 in zip(x1_row, x2_row)] for x1_row, x2_row in zip(X1, X2)])
 
         fig = go.Figure()
-        fig.add_trace(go.Surface(z=Z, x=X1, y=X2, colorscale='viridis'))
+        fig.add_trace(go.Surface(z=Z, x=X1, y=X2, colorscale='plasma'))
         fig.add_trace(go.Scatter3d(
             x=[solution[0]], y=[solution[1]], z=[self.objective(solution)],
             mode='markers',

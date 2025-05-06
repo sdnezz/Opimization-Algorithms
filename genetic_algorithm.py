@@ -134,7 +134,7 @@ class GeneticAlgorithm:
         X1, X2 = np.meshgrid(x1_vals, x2_vals)
         Z = np.array([[self.f(x1, x2) for x1, x2 in zip(x1_row, x2_row)] for x1_row, x2_row in zip(X1, X2)])
 
-        fig.add_trace(go.Surface(z=Z, x=X1, y=X2, colorscale='viridis', opacity=0.7))
+        fig.add_trace(go.Surface(z=Z, x=X1, y=X2, colorscale='plasma', opacity=0.7))
 
         # Траектория поиска решения
         fig.add_trace(go.Scatter3d(

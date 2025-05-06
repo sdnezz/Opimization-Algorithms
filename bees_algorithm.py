@@ -62,10 +62,28 @@ class BeesAlgorithm:
         if "convergence_threshold" in params:
             self.convergence_threshold = params["convergence_threshold"]  # Обновление epsilon
 
+    def himmelblau(x, y):
+        """Функция Химмельблау: (x² + y - 11)² + (x + y² - 7)²"""
+        """Начальные значения для пчелиного алгоритма: scoutbeecount=150, selectedbeecount=5, bestbeecount=20, selsitescount=12, bestsitescount=4, range_lower=-6, range_upper=6, range_shrink=0.95, max_iterations=30, max_stagnation=5, convergence_threshold=1e-6"""
+        """Ожидаемый результат для пчелиного алгоритма: x=3, y=2, f(x,y)=0 (или одна из других точек минимума: (-2.805, 3.131), (-3.779, -3.283), (3.584, -1.848))"""
+        return (x ** 2 + y - 11) ** 2 + (x + y ** 2 - 7) ** 2
+
+    def rosenbrock(x, y):
+        """Функция Розенброка: Σ[100(z_i+1 - z_i²)² + (1 - z_i)²] с минимумом в точке (1,1)"""
+        """Начальные значения для пчелиного алгоритма: scoutbeecount=200, selectedbeecount=5, bestbeecount=25, selsitescount=8, bestsitescount=2, range_lower=-2, range_upper=2, range_shrink=0.95, max_iterations=100, max_stagnation=5, convergence_threshold=1e-8"""
+        """Ожидаемый результат для пчелиного алгоритма: x=1, y=1, f(x,y)=0"""
+        return (1 - x) ** 2 + 100 * (y - x ** 2) ** 2
+
+    def rastrigin(x, y):
+        """Функция Растригина: 20 + x² + y² - 10(cos(2πx) + cos(2πy))"""
+        """Начальные значения для пчелиного алгоритма: scoutbeecount=300, selectedbeecount=5, bestbeecount=20, selsitescount=10, bestsitescount=3, range_lower=-5.12, range_upper=5.12, range_shrink=0.95, max_iterations=30, max_stagnation=5, convergence_threshold=1e-6"""
+        """Ожидаемый результат для пчелиного алгоритма: x=0, y=0, f(x,y)=0"""
+        return 20 + (x ** 2 - 10 * np.cos(2 * np.pi * x)) + (y ** 2 - 10 * np.cos(2 * np.pi * y))
+
     def f(self, x, y):
         # Целевая функция (функция Розенброка для примера)
         # f(x, y) = (1 - x)^2 + 100 * (y - x^2)^2
-        return (1 - x)**2 + 100 * (y - x**2)**2
+        return (x ** 2 + y - 11) ** 2 + (x + y ** 2 - 7) ** 2
 
     class FloatBee:
         def __init__(self, outer):
@@ -211,7 +229,7 @@ class BeesAlgorithm:
         X1, X2 = np.meshgrid(x1_vals, x2_vals)  # Создание сетки координат
         Z = np.array([[self.f(x1, x2) for x1, x2 in zip(x1_row, x2_row)] for x1_row, x2_row in zip(X1, X2)])  # Вычисление f(x, y)
 
-        fig.add_trace(go.Surface(z=Z, x=X1, y=X2, colorscale='viridis', opacity=0.7))  # Добавление поверхности
+        fig.add_trace(go.Surface(z=Z, x=X1, y=X2, colorscale='rainbow', opacity=0.7))  # Добавление поверхности
 
         # Добавление траектории поиска
         fig.add_trace(go.Scatter3d(

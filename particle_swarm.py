@@ -203,7 +203,7 @@ class ParticleSwarmOptimization:
         fig = go.Figure()
 
         # Поверхность целевой функции
-        fig.add_trace(go.Surface(z=Z, x=X1, y=X2, colorscale='viridis', name="f(x1, x2)"))
+        fig.add_trace(go.Surface(z=Z, x=X1, y=X2, colorscale='plasma', name="f(x1, x2)"))
 
         # Траектория лучшей частицы
         trajectory = np.array(trajectory)
