@@ -46,7 +46,7 @@ class GeneticAlgorithm:
         """Точка входа в алгоритм, отрисовка графика и логирование шагов"""
         lower_bound_x, upper_bound_x = self.genetic_bounds  # Границы для x и y
 
-        # Генерация начальной популяции с учетом bounds
+        #1) ИНИЦИАЛИЗАЦИЯ: Генерация начальной популяции с учетом bounds
         population = np.random.uniform(
             low=lower_bound_x,  # нижний предел для x
             high=upper_bound_x,  # верхний предел для x
@@ -59,6 +59,7 @@ class GeneticAlgorithm:
         stable_iterations = 0  # Количество стабильных итераций
 
         for generation in range(self.max_iterations):
+            #2) Оценка пригодности fitness
             fitness = np.array([self.f(ind[0], ind[1]) for ind in population])  # оценка популяции
             current_best_idx = np.argmin(fitness)  # индекс лучшей особи
 
@@ -73,10 +74,10 @@ class GeneticAlgorithm:
 
             # Печать сообщения о сработавшей точке останова
             if stable_iterations >= self.max_stable_iterations:
-                window.log_output(f"Точка останова: Значение функции стабилизировалось за {stable_iterations} итераций.")
+                window.log_output(f"Точка останова: Значение функции стабилизировалось за {stable_iterations} итераций.Оптимальное решение: f(x) = {best_fitness}")
                 break  # Прерывание, если функция стабилизировалась
 
-            # Турнирный отбор
+            # 3) Селекция (отбор) кандидатов лучшего решения
             selected_indices = []
             for _ in range(self.population_size):
                 candidates = np.random.choice(self.population_size, size=5, replace=False)
@@ -84,7 +85,7 @@ class GeneticAlgorithm:
                 selected_indices.append(winner)
             selected_population = population[selected_indices]
 
-            # Скрещивание
+            #4) Кроссовер (Скрещивание)
             for i in range(0, self.population_size, 2):
                 if i + 1 < self.population_size:
                     parent1, parent2 = selected_population[i], selected_population[i + 1]
@@ -93,14 +94,14 @@ class GeneticAlgorithm:
                     child2 = alpha * parent2 + (1 - alpha) * parent1
                     selected_population[i], selected_population[i + 1] = child1, child2
 
-            # Мутация
-            mutation_strength = 0.1 * (0.99 ** generation)
+            # 5) Мутация
+            mutation_strength = 0.1 * (0.99 ** generation) #Сила мутации уменьшается с каждым поколением
             for i in range(self.population_size):
                 if np.random.rand() < self.mutation_rate:
                     selected_population[i] += np.random.normal(0, mutation_strength, 2)
                     selected_population[i] = np.clip(selected_population[i], self.genetic_bounds[0], self.genetic_bounds[1])
 
-            # Замена худшей особи на лучшую
+            # 6) Замена худшей особи на лучшую
             worst_idx = np.argmax([self.f(ind[0], ind[1]) for ind in selected_population])
             selected_population[worst_idx] = best_individual
 
@@ -111,7 +112,7 @@ class GeneticAlgorithm:
 
             # Проверка точки останова по значению функции
             if abs(best_fitness) < self.convergence_threshold:
-                window.log_output(f"Точка останова: Значение функции стало слишком маленьким (f(x) = {best_fitness})")
+                window.log_output(f"Точка останова: Значение функции стало слишком маленьким (оптимальное решение: f(x) = {best_fitness})")
                 break  # Прерывание, если значение функции стало слишком маленьким
 
         # Отрисовка траектории

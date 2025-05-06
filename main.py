@@ -5,6 +5,7 @@ from simplex_quad import SimplexQuad
 from genetic_algorithm import GeneticAlgorithm
 from particle_swarm import ParticleSwarmOptimization
 from bees_algorithm import BeesAlgorithm
+from immune_network import ImmuneNetworkOptimization
 import numpy as np
 class GraphicalApp(QWidget):
     def __init__(self):
@@ -39,8 +40,9 @@ class GraphicalApp(QWidget):
             ("Градиентный спуск", GradientDescent()),
             ("Симплекс-квадратура", SimplexQuad()),
             ("Генетический алгоритм", GeneticAlgorithm()),  # Добавлен новый алгоритм
-            ("Роевый алгоритм", ParticleSwarmOptimization()),
-            ("Пчелиный алгоритм", BeesAlgorithm())
+            ("Роевой алгоритм", ParticleSwarmOptimization()),
+            ("Пчелиный алгоритм", BeesAlgorithm()),
+            ("Имунный алгоритм", ImmuneNetworkOptimization())
         ]
         self.saved_params = {i: {k: str(v) for k, v in algo.get_params().items()} for i, (_, algo) in enumerate(self.algorithms)}
         self.input_fields = {}

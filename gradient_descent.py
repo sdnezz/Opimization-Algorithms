@@ -10,6 +10,7 @@ class GradientDescent:
         self.epsilon2 = 0.001  # Условие для точки и функции
         self.max_iter = 3     # Максимальное количество итераций
 
+
     def get_params(self):
         """Возвращает текущие параметры алгоритма"""
         return {
