@@ -6,7 +6,9 @@ from genetic_algorithm import GeneticAlgorithm
 from particle_swarm import ParticleSwarmOptimization
 from bees_algorithm import BeesAlgorithm
 from immune_network import ImmuneNetworkOptimization
+from bacterial_foraging import BacterialForagingOptimization
 import numpy as np
+
 class GraphicalApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -42,7 +44,8 @@ class GraphicalApp(QWidget):
             ("Генетический алгоритм", GeneticAlgorithm()),  # Добавлен новый алгоритм
             ("Роевой алгоритм", ParticleSwarmOptimization()),
             ("Пчелиный алгоритм", BeesAlgorithm()),
-            ("Имунный алгоритм", ImmuneNetworkOptimization())
+            ("Имунный алгоритм", ImmuneNetworkOptimization()),
+            ("Бактериальный поиск", BacterialForagingOptimization())
         ]
         self.saved_params = {i: {k: str(v) for k, v in algo.get_params().items()} for i, (_, algo) in enumerate(self.algorithms)}
         self.input_fields = {}

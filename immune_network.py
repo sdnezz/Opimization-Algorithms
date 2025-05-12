@@ -7,18 +7,20 @@ from PySide6.QtWebEngineWidgets import QWebEngineView  # Импорт QWebEngine
 class ImmuneNetworkOptimization:  # Определение класса для алгоритма иммунной сети
     def __init__(self):  # Инициализация класса
         self.initial_point = [1.0, 1.0]  # Начальная точка [x, y], задаётся через интерфейс
-        self.max_iterations = 200  # Максимальное число итераций алгоритма
-        self.pop_size = 100  # Размер популяции антител
-        self.n_b = 20  # Число лучших антител для клонирования
-        self.n_c = 10  # Максимальное число клонов для одного антитела
+        self.max_iterations = 2000  # Максимальное число итераций алгоритма
+        self.pop_size = 300  # Размер популяции антител
+        self.n_b = 60  # Число лучших антител для клонирования
+        self.n_c = 25  # Максимальное число клонов для одного антитела
         self.b_s = 0.1  # Доля лучших клонов для сохранения
         self.b_b = 0.01  # Порог BG-аффинности для отбора клонов
-        self.b_r = 0.05  # Порог BB-аффинности для сжатия сети
+        self.b_r = 0.03  # Порог BB-аффинности для сжатия сети
         self.b_n = 0.15  # Доля антител, заменяемых случайными
-        self.mutation_rate = 0.5  # Начальная сила мутации
+        self.mutation_rate = 0.15  # Начальная сила мутации
         self.range_lower = -2  # Нижняя граница пространства поиска
         self.range_upper = 2  # Верхняя граница пространства поиска
         self.f = lambda x, y: (1 - x)**2 + 100*(y - x**2)**2  # Функция Розенброка
+        # self.f = lambda x, y: (x ** 2 + y - 11) ** 2 + (x + y ** 2 - 7) ** 2 #Химмельблау
+        # self.f = lambda x, y: 20 + x ** 2 - 10 * np.cos(2 * np.pi * x) + y ** 2 - 10 * np.cos(2 * np.pi * y) # Растринга
 
     class Antibody:  # Внутренний класс для представления антитела
         def __init__(self, x, y, outer):  # Инициализация антитела
@@ -28,45 +30,45 @@ class ImmuneNetworkOptimization:  # Определение класса для �
 
     def get_params(self):  # Метод для получения параметров алгоритма
         return {  # Возвращает словарь с текущими параметрами
-            "initial_point": self.initial_point,  # Начальная точка
-            "max_iterations": self.max_iterations,  # Максимальное число итераций
-            "pop_size": self.pop_size,  # Размер популяции
-            "n_b": self.n_b,  # Число лучших антител
-            "n_c": self.n_c,  # Максимальное число клонов
-            "b_s": self.b_s,  # Доля сохраняемых клонов
-            "b_b": self.b_b,  # Порог BG-аффинности
-            "b_r": self.b_r,  # Порог BB-аффинности
-            "b_n": self.b_n,  # Доля заменяемых антител
-            "mutation_rate": self.mutation_rate,  # Сила мутации
-            "range_lower": self.range_lower,  # Нижняя граница поиска
-            "range_upper": self.range_upper  # Верхняя граница поиска
+            "initial_point": self.initial_point,
+            "max_iterations": self.max_iterations,
+            "pop_size": self.pop_size,
+            "n_b": self.n_b,
+            "n_c": self.n_c,
+            "b_s": self.b_s,
+            "b_b": self.b_b,
+            "b_r": self.b_r,
+            "b_n": self.b_n,
+            "mutation_rate": self.mutation_rate,
+            "range_lower": self.range_lower,
+            "range_upper": self.range_upper
         }
 
     def set_params(self, params):  # Метод для установки параметров из интерфейса
-        if "initial_point" in params:  # Проверка наличия initial_point
-            self.initial_point = params["initial_point"]  # Установка начальной точки
-        if "max_iterations" in params:  # Проверка наличия max_iterations
-            self.max_iterations = params["max_iterations"]  # Установка числа итераций
-        if "pop_size" in params:  # Проверка наличия pop_size
-            self.pop_size = params["pop_size"]  # Установка размера популяции
-        if "n_b" in params:  # Проверка наличия n_b
-            self.n_b = params["n_b"]  # Установка числа лучших антител
-        if "n_c" in params:  # Проверка наличия n_c
-            self.n_c = params["n_c"]  # Установка числа клонов
-        if "b_s" in params:  # Проверка наличия b_s
-            self.b_s = params["b_s"]  # Установка доли сохраняемых клонов
-        if "b_b" in params:  # Проверка наличия b_b
-            self.b_b = params["b_b"]  # Установка порога BG-аффинности
-        if "b_r" in params:  # Проверка наличия b_r
-            self.b_r = params["b_r"]  # Установка порога BB-аффинности
-        if "b_n" in params:  # Проверка наличия b_n
-            self.b_n = params["b_n"]  # Установка доли заменяемых антител
-        if "mutation_rate" in params:  # Проверка наличия mutation_rate
-            self.mutation_rate = params["mutation_rate"]  # Установка силы мутации
-        if "range_lower" in params:  # Проверка наличия range_lower
-            self.range_lower = params["range_lower"]  # Установка нижней границы
-        if "range_upper" in params:  # Проверка наличия range_upper
-            self.range_upper = params["range_upper"]  # Установка верхней границы
+        if "initial_point" in params and params["initial_point"]:  # Проверка наличия и непустоты
+            self.initial_point = params["initial_point"]
+        if "max_iterations" in params and params["max_iterations"]:  # Проверка наличия и непустоты
+            self.max_iterations = params["max_iterations"]
+        if "pop_size" in params and params["pop_size"]:  # Проверка наличия и непустоты
+            self.pop_size = params["pop_size"]
+        if "n_b" in params and params["n_b"]:  # Проверка наличия и непустоты
+            self.n_b = params["n_b"]
+        if "n_c" in params and params["n_c"]:  # Проверка наличия и непустоты
+            self.n_c = params["n_c"]
+        if "b_s" in params and params["b_s"]:  # Проверка наличия и непустоты
+            self.b_s = params["b_s"]
+        if "b_b" in params and params["b_b"]:  # Проверка наличия и непустоты
+            self.b_b = params["b_b"]
+        if "b_r" in params and params["b_r"]:  # Проверка наличия и непустоты
+            self.b_r = params["b_r"]
+        if "b_n" in params and params["b_n"]:  # Проверка наличия и непустоты
+            self.b_n = params["b_n"]
+        if "mutation_rate" in params and params["mutation_rate"]:  # Проверка наличия и непустоты
+            self.mutation_rate = params["mutation_rate"]
+        if "range_lower" in params and params["range_lower"]:  # Проверка наличия и непустоты
+            self.range_lower = params["range_lower"]
+        if "range_upper" in params and params["range_upper"]:  # Проверка наличия и непустоты
+            self.range_upper = params["range_upper"]
 
     def compute_bb_affinity(self, ab1, ab2):  # Метод для вычисления BB-аффинности
         return np.sqrt((ab1.x - ab2.x)**2 + (ab1.y - ab2.y)**2)  # Евклидово расстояние между антителами
@@ -96,14 +98,14 @@ class ImmuneNetworkOptimization:  # Определение класса для �
         fitness_history = []  # Список для истории значений f(x, y)
         stagnation_count = 0  # Счётчик итераций с малым изменением f(x, y)
         no_improvement_count = 0  # Счётчик итераций без улучшений
-        epsilon = 1e-4  # Порог для критерия остановки по стабильности
+        epsilon = 5e-6  # Порог для критерия остановки по стабильности
 
         for iteration in range(self.max_iterations):  # Цикл по итерациям
             S_b = sorted(S_b, key=lambda ab: ab.bg_affinity, reverse=True)  # Сортировка антител по BG-аффинности
             selected = S_b[:self.n_b]  # Выбор n_b лучших антител
 
             current_fitness = self.f(S_b[0].x, S_b[0].y) if S_b else 1.0  # Значение f(x, y) лучшего антитела
-            current_mutation_rate = self.mutation_rate if current_fitness > 0.01 else 0.1  # Адаптивная мутация
+            current_mutation_rate = self.mutation_rate if current_fitness > 0.01 else 0.02  # Адаптивная мутация
 
             clones = []  # Пустой список для клонов
             for ab in selected:  # Цикл по выбранным антителам
@@ -151,10 +153,10 @@ class ImmuneNetworkOptimization:  # Определение класса для �
                 iterations_log.append(f"Улучшение на итерации {iteration}: x=[{best_solution.x:.6f}, {best_solution.y:.6f}], f(x)={current_fitness:.6f}")  # Лог улучшения
                 no_improvement_count = 0  # Сброс счётчика без улучшений
             else:
-                iterations_log.append(f"Итерация {iteration}: x=[{best_solution.x:.6f}, {best_solution.y:.6f}], f(x)={current_fitness:.6f}")  # Лог без улучшения
                 no_improvement_count += 1  # Увеличение счётчика без улучшений
+                iterations_log.append(f"Итерация {iteration}: x=[{best_solution.x:.6f}, {best_solution.y:.6f}], f(x)={current_fitness:.6f}")  # Лог без улучшения
 
-            if no_improvement_count >= 5:  # Проверка застревания
+            if no_improvement_count % 50 == 0 and no_improvement_count > 0:  # Проверка застревания
                 iterations_log.append(f"Предупреждение: нет улучшений в течение {no_improvement_count} итераций")  # Лог предупреждения
 
             fitness_history.append(current_fitness)  # Добавление f(x, y) в историю
@@ -165,20 +167,25 @@ class ImmuneNetworkOptimization:  # Определение класса для �
                     stagnation_count += 1  # Увеличение счётчика стабильности
                 else:
                     stagnation_count = 0  # Сброс счётчика стабильности
-                if stagnation_count >= 10:  # Проверка критерия остановки
-                    iterations_log.append(f"Остановка: значение функции стабильно в течение 10 итераций (разница < {epsilon})")  # Лог остановки
+                if stagnation_count >= 150:  # Проверка критерия остановки
+                    iterations_log.append(f"Остановка: значение функции стабильно в течение 150 итераций (разница < {epsilon})")  # Лог остановки
                     break  # Прерывание цикла
 
-            if current_fitness < 1e-6:  # Проверка достижения минимума
-                iterations_log.append("Достигнут минимум!")  # Лог достижения минимума
+            if current_fitness < 5e-5:  # Проверка достижения минимума
+                iterations_log.append("Остановка: достигнут минимум (f(x, y) < 5e-5)")  # Лог достижения минимума
                 break  # Прерывание цикла
 
             trajectory.append([best_solution.x, best_solution.y])  # Добавление лучшей точки в траекторию
+
+        if iteration == self.max_iterations - 1:  # Проверка исчерпания итераций
+            iterations_log.append(f"Остановка: достигнуто максимальное число итераций ({self.max_iterations})")
 
         final_point = [best_solution.x, best_solution.y]  # Финальная точка [x, y]
         return final_point, trajectory, "Иммунная сеть завершена", iterations_log  # Возврат результатов
 
     def plot(self, window):  # Метод для визуализации результатов
+        window.log_output("Алгоритм запущен...")  # Вывод сообщения о запуске
+        window.log_output(f"Параметры перед запуском: {self.get_params()}")  # Вывод параметров
         final_point, trajectory, message, iterations_log = self.run()  # Запуск алгоритма и получение результатов
 
         for log in iterations_log:  # Цикл по логам
