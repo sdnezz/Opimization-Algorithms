@@ -17,7 +17,8 @@ class BacterialForagingOptimization:  # Определяет класс для �
         self.elim_count = 10  # Задаёт число бактерий, проверяемых на ликвидацию
         self.bounds_lower = -5  # Задаёт нижнюю границу пространства поиска
         self.bounds_upper = 5  # Задаёт верхнюю границу пространства поиска
-        self.f = lambda x, y: (1 - x)**2 + 100*(y - x**2)**2  # Задаёт функцию Розенброка для минимизации
+        # self.f = lambda x, y: (1 - x)**2 + 100*(y - x**2)**2  # Задаёт функцию Розенброка для минимизации
+        self.f = lambda x, y: (x**2 + y**2)
 
     class Bacterium:  # Определяет класс для представления одной бактерии
         def __init__(self, outer):  # Инициализирует бактерию
@@ -117,7 +118,7 @@ class BacterialForagingOptimization:  # Определяет класс для �
                     best_fitness = current_fitness  # Обновляет лучшее значение
                     best_position = current_best.position.copy()  # Обновляет лучшую позицию
                 trajectory.append(best_position.copy())  # Добавляет лучшую позицию в траекторию
-                # iterations_log.append(f"Итерация ликвидации {l}, репродукция {r}: x=[{best_position[0]:.6f}, {best_position[1]:.6f}], f(x)={best_fitness:.6f}")  # Логирует итерацию
+                iterations_log.append(f"Итерация ликвидации {l}, репродукция {r}: x=[{best_position[0]:.6f}, {best_position[1]:.6f}], f(x)={best_fitness:.6f}")  # Логирует итерацию
 
             #5 ЛИКВИДАЦИЯ/РАССЕИВАНИЕ
             elim_indices = np.random.choice(self.num_bacteria, self.elim_count, replace=False)  # Выбирает индексы для ликвидации
