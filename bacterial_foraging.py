@@ -69,16 +69,18 @@ class BacterialForagingOptimization:  # Определяет класс для �
             self.bounds_upper = params["bounds_upper"]  # Обновляет верхнюю границу
 
     def run(self):  # Выполняет алгоритм бактериального поиска
+        #1 ИНИЦИАЛИЗАЦИЯ
         bacteria = [self.Bacterium(self) for _ in range(self.num_bacteria)]  # Создаёт популяцию бактерий
         best_fitness = float('inf')  # Инициализирует лучшее значение функции как бесконечность
         best_position = None  # Инициализирует лучшую позицию как None
         trajectory = []  # Создаёт список для хранения траектории поиска
         iterations_log = []  # Создаёт список для хранения логов итераций
 
-        for l in range(self.elim_steps):  # Цикл по числу циклов ликвидации
-            for r in range(self.repro_steps):  # Цикл по числу циклов репродукции
-                for t in range(self.chem_steps):  # Цикл по числу шагов хемотаксиса
-                    current_step_size = self.step_size / (t + 1)  # Уменьшает шаг с каждым шагом хемотаксиса
+        for l in range(self.elim_steps):  # Цикл по числу циклов ЛИКВИДАЦИИ
+            for r in range(self.repro_steps):  # Цикл по числу циклов РЕПРОДУКЦИИ
+                #2 ХЕМОТАКСИС
+                for t in range(self.chem_steps):  # Цикл по числу шагов ХЕМОТАКСИСА
+                    current_step_size = self.step_size / (t + 1)  # УМЕНЬШАЕТ ШАГ ХЕМОТАКСИСА
                     for bacterium in bacteria:  # Перебирает все бактерии
                         current_fitness = self.f(bacterium.position[0], bacterium.position[1])  # Вычисляет текущее значение функции
                         bacterium.update_health(current_fitness)  # Обновляет здоровье бактерии
@@ -102,11 +104,13 @@ class BacterialForagingOptimization:  # Определяет класс для �
                             bacterium.position = bacterium.position + current_step_size * direction  # Делает шаг в новом направлении
                             bacterium.position = np.clip(bacterium.position, self.bounds_lower, self.bounds_upper)  # Ограничивает позицию
 
+                #3 РЕПРОДУКЦИЯ
                 bacteria.sort(key=lambda b: b.health)  # Сортирует бактерии по здоровью (меньше — лучше)
                 survivors = bacteria[:self.num_bacteria // 2]  # Выбирает половину лучших бактерий
                 bacteria = survivors + [self.Bacterium(self) for _ in range(self.num_bacteria // 2)]  # Создаёт новую популяцию
                 for i in range(self.num_bacteria // 2):  # Перебирает индексы для второй половины
                     bacteria[self.num_bacteria // 2 + i].position = survivors[i].position.copy()  # Копирует позиции лучших бактерий
+                #4 ОБНОВЛЕНИЕ ЛУЧШЕГО РЕШЕНИЯ
                 current_best = min(bacteria, key=lambda b: self.f(b.position[0], b.position[1]))  # Находит лучшую бактерию
                 current_fitness = self.f(current_best.position[0], current_best.position[1])  # Вычисляет её значение функции
                 if current_fitness < best_fitness:  # Если текущее значение лучше предыдущего лучшего
@@ -115,11 +119,12 @@ class BacterialForagingOptimization:  # Определяет класс для �
                 trajectory.append(best_position.copy())  # Добавляет лучшую позицию в траекторию
                 # iterations_log.append(f"Итерация ликвидации {l}, репродукция {r}: x=[{best_position[0]:.6f}, {best_position[1]:.6f}], f(x)={best_fitness:.6f}")  # Логирует итерацию
 
+            #5 ЛИКВИДАЦИЯ/РАССЕИВАНИЕ
             elim_indices = np.random.choice(self.num_bacteria, self.elim_count, replace=False)  # Выбирает индексы для ликвидации
             for i in elim_indices:  # Перебирает выбранные индексы
                 if np.random.random() < self.elim_prob:  # Проверяет, ликвидировать ли бактерию
                     bacteria[i] = self.Bacterium(self)  # Заменяет бактерию новой
-
+        #6 ЗАВЕРШЕНИЕ
         return best_position, trajectory, "Бактериальный поиск завершён", iterations_log  # Возвращает результаты
 
     def plot(self, window):  # Выполняет алгоритм и визуализирует результаты
