@@ -7,7 +7,9 @@ from particle_swarm import ParticleSwarmOptimization
 from bees_algorithm import BeesAlgorithm
 from immune_network import ImmuneNetworkOptimization
 from bacterial_foraging import BacterialForagingOptimization
+from hybrid_bfo_pso import HybridBFOPSO
 import numpy as np
+import matplotlib.pyplot as plt
 
 class GraphicalApp(QWidget):
     def __init__(self):
@@ -41,11 +43,12 @@ class GraphicalApp(QWidget):
         self.algorithms = [
             ("Градиентный спуск", GradientDescent()),
             ("Симплекс-квадратура", SimplexQuad()),
-            ("Генетический алгоритм", GeneticAlgorithm()),  # Добавлен новый алгоритм
+            ("Генетический алгоритм", GeneticAlgorithm()),
             ("Роевой алгоритм", ParticleSwarmOptimization()),
             ("Пчелиный алгоритм", BeesAlgorithm()),
             ("Имунный алгоритм", ImmuneNetworkOptimization()),
-            ("Бактериальный поиск", BacterialForagingOptimization())
+            ("Бактериальный поиск", BacterialForagingOptimization()),
+            ("Гибридный BFO+PSO", HybridBFOPSO())
         ]
         self.saved_params = {i: {k: str(v) for k, v in algo.get_params().items()} for i, (_, algo) in enumerate(self.algorithms)}
         self.input_fields = {}
@@ -99,7 +102,6 @@ class GraphicalApp(QWidget):
         params = self.saved_params.get(current_tab_index, {k: str(v) for k, v in self.algorithm.get_params().items()})
         for param, value in self.algorithm.get_params().items():
             label = QLabel(f"{param}:")
-            # Преобразуем значение в строку явно
             input_field = QLineEdit(str(params.get(param, str(value))))
             form_layout.addRow(label, input_field)
             self.input_fields[param] = input_field
@@ -111,38 +113,34 @@ class GraphicalApp(QWidget):
         for param, field in self.input_fields.items():
             value = field.text()
             try:
-                # Обрабатываем параметры для разных алгоритмов
                 if param in ["c", "A", "b", "func_structure", "ineq_signs"]:
-                    # Преобразуем строки, представляющие списки, в настоящие списки
                     params[param] = eval(value) if value else self.algorithm.get_params()[param]
                 elif param == "extr":
                     params[param] = value
                 elif param == "max_iter":
                     params[param] = int(value)
-                elif param == "genetic_bounds":  # Для генетического алгоритма bounds изменяем на genetic_bounds
+                elif param == "genetic_bounds":
                     params[param] = eval(value) if value else self.algorithm.get_params()[param]
-                elif param == "bounds":  # Для SimplexQuad bounds остаётся так, как было
+                elif param == "bounds":
                     params[param] = eval(value) if value else self.algorithm.get_params()[param]
-                elif param == "convergence_threshold":  # Обработка параметра convergence_threshold как float
+                elif param == "convergence_threshold":
                     params[param] = float(value) if value else self.algorithm.get_params()[param]
                 elif param in ["initial_point", "minvalues", "maxvalues"]:
-                    # Используем eval с пространством имён numpy
                     params[param] = eval(value, {"np": np}) if value else self.algorithm.get_params()[param]
-                elif param in ["max_iterations", "swarmsize"]:
+                elif param in ["max_iterations", "swarmsize", "bfo_iterations", "pso_iterations", "num_bacteria", "chem_steps", "repro_steps", "elim_steps", "elim_count"]:
                     params[param] = int(value)
-                elif param in ["current_velocity_ratio", "local_velocity_ratio", "global_velocity_ratio"]:
+                elif param in ["current_velocity_ratio", "local_velocity_ratio", "global_velocity_ratio", "step_size", "elim_prob", "bounds_lower", "bounds_upper"]:
                     params[param] = float(value)
-                elif param in ["scoutbeecount", "selectedbeecount", "bestbeecount", "selsitescount", "bestsitescount",
-                               "max_iterations", "max_stagnation"]:
+                elif param == "dimension":
                     params[param] = int(value)
-                elif param in ["range_lower", "range_upper", "range_shrink", "convergence_threshold"]:
+                elif param in ["scoutbeecount", "selectedbeecount", "bestbeecount", "selsitescount", "bestsitescount", "max_stagnation"]:
+                    params[param] = int(value)
+                elif param in ["range_lower", "range_upper", "range_shrink"]:
                     params[param] = float(value)
                 else:
-                    # Преобразуем числа в float (или int, если целые числа)
                     params[param] = float(value) if '.' in value else int(value)
             except (ValueError, SyntaxError, NameError) as e:
                 self.log_output(f"Ошибка в параметре {param}: {str(e)}")
-
         self.algorithm.set_params(params)
 
     def run_algorithm(self):
@@ -150,6 +148,65 @@ class GraphicalApp(QWidget):
         try:
             self.apply_fields_to_algorithm()
             self.log_output(f"Параметры перед запуском: {self.algorithm.__dict__}")
+
+            # Сбор данных для графиков
+            bfo_times, bfo_value = self.algorithms[6][1].plot(self)  # Бактериальный поиск
+            pso_times, pso_value = self.algorithms[3][1].plot(self)  # Роевой алгоритм
+            hybrid_times, hybrid_value = self.algorithms[7][1].plot(self)  # Гибридный BFO+PSO
+
+            # График времени выполнения от числа итераций
+            plt.figure(figsize=(8, 6))
+            bfo_iters, bfo_t = zip(*bfo_times)
+            pso_iters, pso_t = zip(*pso_times)
+            hybrid_iters, hybrid_t = zip(*hybrid_times)
+            plt.plot(bfo_iters, bfo_t, 'b-', label='Бактериальный поиск')
+            plt.plot(pso_iters, pso_t, 'r-', label='PSO')
+            plt.plot(hybrid_iters, hybrid_t, 'g-', label='Гибридный BFO+PSO')
+            plt.xlabel('Число итераций')
+            plt.ylabel('Время выполнения (секунды)')
+            plt.title('Зависимость времени выполнения от числа итераций')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+
+            # График точности от размера популяции/роя
+            population_sizes = [10, 20, 50, 100]
+            bfo_values = []
+            pso_values = []
+            hybrid_values = []
+            for size in population_sizes:
+                # BFO
+                bfo = BacterialForagingOptimization()
+                bfo_params = self.algorithms[6][1].get_params()
+                bfo_params["num_bacteria"] = size
+                bfo.set_params(bfo_params)
+                _, _, _, _, _, _, bfo_val = bfo.run()
+                bfo_values.append(bfo_val)
+                # PSO
+                pso = ParticleSwarmOptimization(swarmsize=size, minvalues=self.algorithms[3][1].minvalues, maxvalues=self.algorithms[3][1].maxvalues)
+                _, _, _, _, _, pso_val = pso.run()
+                pso_values.append(pso_val)
+                # Гибрид
+                hybrid = HybridBFOPSO()
+                hybrid_params = self.algorithms[7][1].get_params()
+                hybrid_params["num_bacteria"] = size
+                hybrid_params["swarmsize"] = size
+                hybrid.set_params(hybrid_params)
+                _, _, _, _, _, hybrid_val = hybrid.run()
+                hybrid_values.append(hybrid_val)
+
+            plt.figure(figsize=(8, 6))
+            plt.plot(population_sizes, bfo_values, 'b-', label='Бактериальный поиск')
+            plt.plot(population_sizes, pso_values, 'r-', label='PSO')
+            plt.plot(population_sizes, hybrid_values, 'g-', label='Гибридный BFO+PSO')
+            plt.xlabel('Размер популяции/роя')
+            plt.ylabel('Значение функции f(x)')
+            plt.title('Зависимость точности от размера популяции/роя')
+            plt.legend()
+            plt.grid(True)
+            plt.ticklabel_format(useOffset=False, style='plain')
+            plt.show()
+
             self.algorithm.plot(self)
         except Exception as e:
             self.log_output(f"Ошибка при запуске: {str(e)}")
