@@ -2,6 +2,8 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.io as pio
 from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QMessageBox
+
 from bacterial_foraging import BacterialForagingOptimization
 from particle_swarm import ParticleSwarmOptimization
 import time
@@ -50,7 +52,11 @@ class HybridBFOPSO:
         if "pso_iterations" in params:
             self.pso_iterations = params["pso_iterations"]
         if "num_bacteria" in params:
-            self.num_bacteria = params["num_bacteria"]
+            num_bacteria = params["num_bacteria"]
+            if num_bacteria % 2 != 0:
+                QMessageBox.critical(None, "Ошибка", "Число бактерий должно быть чётным")
+                raise ValueError("Число бактерий должно быть чётным")
+            self.num_bacteria = num_bacteria
         if "swarmsize" in params:
             self.swarmsize = params["swarmsize"]
         if "bounds_lower" in params:
